@@ -2,34 +2,38 @@ import PyPDF2
 from os import getcwd, mkdir, path, rename
 import easygui
 from nameparser import HumanName
+import sys
 
 working_path = getcwd()
-file_name = '2018_12_19_14_04_32.pdf'
-page = 0
+filename = '2018_12_19_14_04_32.pdf'
 base_storage_folder = '/Scans'
 
 
-def get_page(file_name, page):
-    with open(file_name, 'rb') as f:
+def get_page(filename, page_num):
+    with open(filename, 'rb') as f:
         pdf_reader = PyPDF2.PdfFileReader(f)
-        page_qty = pdf_reader.numPages
-        page_obj = pdf_reader.getPage(page)
+        qty = pdf_reader.numPages
+        page_obj = pdf_reader.getPage(page_num)
         the_page = page_obj.extractText()
-        return the_page, page_qty
+        return the_page, qty
 
 
-the_page, page_qty = get_page(file_name, page)
+def name_from_pdf(filename):
+    page_num = 0
+    the_page, page_qty = get_page(filename, page_num)
 
-while page <= page_qty:
-    if the_page.find('8879') == 0:
-        nameEnd = the_page.find("Spouse's name")
-        nameStart = the_page.find("Taxpayer's name") + 15
-        name = the_page[nameStart:nameEnd]
-        break
-    else:
-        print('Page is not 8879, advancing')
-        page += 1
-        the_page, page_qty = get_page(file_name, page)
+    while page_num <= page_qty:
+        if the_page.find('8879') == 0:
+            nameEnd = the_page.find("Spouse's name")
+            nameStart = the_page.find("Taxpayer's name") + 15
+            name = the_page[nameStart:nameEnd]
+            break
+        else:
+            print('Page is not 8879, advancing')
+            page_num += 1
+            the_page, page_qty = get_page(filename, page_num)
+    return name
+
 
 print('Done, Found name:', name)
 name_parse = HumanName(name)
