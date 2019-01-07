@@ -56,7 +56,7 @@ def name_parse(name):
 
 
 def dis_dialog(name):
-    msg = 'Check that name found is correct:'
+    msg = 'Check name found is correct:'
     title = 'Enter Name'
     fieldName = ['Name:']
     fieldValue = [name]
