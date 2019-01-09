@@ -15,7 +15,8 @@ def get_config():
             root_path = data['config']['base_path']
             year_path = data['config']['year']
             confirm = data['config']['confirm']
-            return root_path, year_path, confirm
+            count = data['config']['count']
+            return root_path, year_path, confirm, count
     except FileNotFoundError:
         print('Config not found')
         return None, None, None
@@ -119,14 +120,16 @@ def make_dir(name, filename, root_path, year_path, results=None):
     return results
 
 
-def save_settings(root_path, year_path, confirm):
+def save_settings(root_path, year_path, confirm, count):
     try:
         with open('config.json', 'w') as f:
+            count += 1
             data = dict()
             data['config'] = {}
             data['config']['base_path'] = root_path
             data['config']['year'] = year_path
             data['config']['confirm'] = confirm
+            data['config']['count'] = count
             json.dump(data, f)
     except FileNotFoundError:
         print('Config not found')
@@ -284,7 +287,7 @@ class NameGUI:
 
 def main():
     global root_path, year_path, confirm, name, root, filename
-    root_path, year_path, confirm = get_config()
+    root_path, year_path, confirm, count = get_config()
     if not root_path:
         return
     filename = get_filename()
@@ -305,7 +308,7 @@ def main():
 
     if not name:
         return
-    save_settings(root_path, year_path, confirm)
+    save_settings(root_path, year_path, confirm, count)
 
 
 main()
