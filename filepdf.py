@@ -248,6 +248,9 @@ class NameGUI:
         confirm = self.tk_confirm.get()
         root_path = self.tk_path.get()
         year_path = self.tk_year.get()
+        if name == "":
+            messagebox.showinfo('Error', 'Need to enter a name')
+            return
         if confirm == 1:
             print('Displaying Confirmation')
             lines = ['Moving to location:', '{}/{}/{}'.format(root_path, year_path, name)]
