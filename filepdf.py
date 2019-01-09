@@ -25,6 +25,7 @@ def get_filename():
         filename = sys.argv[1]
         return filename
     else:
+        print('No filename specified')
         return None
 
 
@@ -111,8 +112,20 @@ def make_dir(name, filename, root_path, year_path, results=None):
     return results
 
 
-class NameGUI:
+def save_settings(root_path, year_path, confirm):
+    try:
+        with open('config.json', 'w') as f:
+            data = dict()
+            data['config'] = {}
+            data['config']['base_path'] = root_path
+            data['config']['year'] = year_path
+            data['config']['confirm'] = confirm
+            json.dump(data, f)
+    except FileNotFoundError:
+        print('Config not found')
 
+
+class NameGUI:
     def __init__(self, master):
         # Top Heading Section
         heading = Frame(master, bg='white')
@@ -259,8 +272,6 @@ def main():
     if not filename:
         return
     name = name_from_pdf(filename)
-    if name is False:
-        return
     if name:
         name = name_parser(name)
 
@@ -276,6 +287,7 @@ def main():
         return
     results = make_dir(name, filename, root_path, year_path)
     print('Results:', results)
+    save_settings(root_path, year_path, confirm)
 
 
 main()
