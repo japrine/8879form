@@ -5,6 +5,7 @@ from tkinter import filedialog, messagebox, simpledialog
 from nameparser import HumanName
 import sys
 import json
+import datetime
 
 
 def get_config():
@@ -72,8 +73,12 @@ def name_parser(name):
 
 
 def move_file(name, filename, root_path, year_path):
+    now = datetime.datetime.now()
+    global new_filename
+    new_filename = name + now.strftime(' %m-%d-%Y %H%M.pdf')
+    print(new_filename)
     try:
-        rename(filename, '{}/{}/{}/{}'.format(root_path, year_path, name, filename))
+        rename(filename, '{}/{}/{}/{}'.format(root_path, year_path, name, new_filename))
     except FileExistsError:
         print('File name already exists, cannot move.')
         return 'File name exists'
@@ -82,7 +87,7 @@ def move_file(name, filename, root_path, year_path):
         return 'File to move was missing'
     else:
         print('File has been moved.')
-        return None
+        return 'File has been moved'
 
 
 def make_dir(name, filename, root_path, year_path, results=None):
@@ -91,6 +96,7 @@ def make_dir(name, filename, root_path, year_path, results=None):
         if path.isdir('{}/{}/{}'.format(root_path, year_path, name)) is True:
             print('Folder already exists, moving file.')
             results = move_file(name, filename, root_path, year_path)
+            return results
         else:
             try:
                 mkdir('{}/{}/{}'.format(root_path, year_path, name))
@@ -100,6 +106,7 @@ def make_dir(name, filename, root_path, year_path, results=None):
             else:
                 print('Created directory for', name)
                 results = move_file(name, filename, root_path, year_path)
+                return results
     else:
         try:
             mkdir('{}/{}'.format(root_path, year_path))
@@ -127,6 +134,7 @@ def save_settings(root_path, year_path, confirm):
 
 class NameGUI:
     def __init__(self, master):
+        master.protocol("WM_DELETE_WINDOW", self.confirm_exit)
         # Top Heading Section
         heading = Frame(master, bg='white')
         heading.pack()
@@ -243,7 +251,7 @@ class NameGUI:
         print(year_path)
 
     def confirm_client(self):
-        global name, confirm, root_path, year_path
+        global name, confirm, root_path, year_path, filename
         name = self.tk_name.get()
         confirm = self.tk_confirm.get()
         root_path = self.tk_path.get()
@@ -251,11 +259,20 @@ class NameGUI:
         if name == "":
             messagebox.showinfo('Error', 'Need to enter a name')
             return
+
+        results = make_dir(name, filename, root_path, year_path)
+        lines = ['Moving file {}'.format(filename),
+                 'Moving to folder:',
+                 '{}/{}/{}/'.format(root_path, year_path, name),
+                 'New filename:',
+                 '{}'.format(new_filename),
+                 '',
+                 'Results: {}'.format(results)]
+
         if confirm == 1:
             print('Displaying Confirmation')
-            lines = ['Moving to location:', '{}/{}/{}'.format(root_path, year_path, name)]
             messagebox.showinfo('Confirmation', '\n'.join(lines))
-        print(name, root_path, year_path, confirm)
+        # print(name, root_path, year_path, confirm)
         root.quit()
 
     def confirm_exit(self):
@@ -266,7 +283,7 @@ class NameGUI:
 
 
 def main():
-    global root_path, year_path, confirm, name, root
+    global root_path, year_path, confirm, name, root, filename
     root_path, year_path, confirm = get_config()
     if not root_path:
         return
@@ -288,8 +305,6 @@ def main():
 
     if not name:
         return
-    results = make_dir(name, filename, root_path, year_path)
-    print('Results:', results)
     save_settings(root_path, year_path, confirm)
 
 
