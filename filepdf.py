@@ -287,8 +287,8 @@ def main():
     root_path, year_path, confirm = get_config()
     if not root_path:
         return
-    # filename = get_filename()
-    filename = '2018_12_19_14_04_32.pdf'
+    filename = get_filename()
+    # filename = '2018_12_19_14_04_32.pdf'
     if not filename:
         return
     name = name_from_pdf(filename)
