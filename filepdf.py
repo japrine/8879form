@@ -3,16 +3,29 @@ from os import getcwd, mkdir, path, rename
 import easygui
 from nameparser import HumanName
 import sys
+import json
 
 working_path = getcwd()
-filename = '2018_12_19_14_04_32.pdf'
-base_storage_folder = '/Scans'
+
+
+def get_config():
+    try:
+        with open('config.json') as f:
+            data = json.load(f)
+            root_path = data['config']['base_path']
+            year_path = data['config']['year']
+            return root_path, year_path
+    except FileNotFoundError:
+        print('Config not found')
+        return None, None
 
 
 def get_filename():
     if sys.argv[1:]:
         filename = sys.argv[1]
         return filename
+    else:
+        return None
 
 
 def get_page(filename, page_num):
@@ -81,39 +94,60 @@ def dis_dialog(name):
     return name
 
 
-def move_file(name, filename):
+def move_file(name, filename, root_path, year_path):
     try:
-        rename(filename, '/Scans/{}/{}'.format(name, filename))
+        rename(filename, '{}/{}/{}/{}'.format(root_path, year_path, name, filename))
     except FileExistsError:
         print('File name already exists, cannot move.')
+        return 'File name exists'
     else:
         print('File has been moved.')
+        return None
 
 
-def make_dir(name):
-    if path.isdir('/Scans/{}'.format(name)) is True:
-        print('Folder already exists, moving file.')
-        move_file(name, filename)
+def make_dir(name, filename, root_path, year_path):
+    # results = None
+    if path.isdir('{}/{}'.format(root_path, year_path)) is True:
+        if path.isdir('{}/{}/{}'.format(root_path, year_path, name)) is True:
+            print('Folder already exists, moving file.')
+            move_file(name, filename, root_path, year_path)
+        else:
+            try:
+                mkdir('{}/{}/{}'.format(root_path, year_path, name))
+            except OSError:
+                print('Failed creating directory')
+                return 'Failed to create folder'
+            else:
+                print('Created directory for', name)
+                results = move_file(name, filename, root_path, year_path)
     else:
         try:
-            mkdir('/Scans/{}'.format(name))
+            mkdir('{}/{}'.format(root_path, year_path))
         except OSError:
-            print('Failed creating directory')
+            print('Failed to create directory')
+            return 'Failed to create folder'
         else:
-            print('Created directory for', name)
-            move_file(name, filename)
+            print('Created directory for', year_path)
+            results = make_dir(name, filename, root_path, year_path)
+    return results
 
 
 def main():
+    root_path, year_path = get_config()
+    if not root_path:
+        return
     # filename = get_filename()
-    if filename:
-        name = name_from_pdf(filename)
-        if name:
-            name = name_parse(name)
-            name = dis_dialog(name)
-            if not name:
-                return
-            make_dir(name)
+    filename = '2018_12_19_14_04_32.pdf'
+    if not filename:
+        return
+    name = name_from_pdf(filename)
+    if name:
+        name = name_parse(name)
+    name = dis_dialog(name)
+    if not name:
+        return
+    results = make_dir(name, filename, root_path, year_path)
+    print('Results:', results)
 
 
 main()
