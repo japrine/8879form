@@ -14,10 +14,11 @@ def get_config():
             data = json.load(f)
             root_path = data['config']['base_path']
             year_path = data['config']['year']
-            return root_path, year_path
+            confirm = data['config']['confirm']
+            return root_path, year_path, confirm
     except FileNotFoundError:
         print('Config not found')
-        return None, None
+        return None, None, None
 
 
 def get_filename():
@@ -100,17 +101,20 @@ def move_file(name, filename, root_path, year_path):
     except FileExistsError:
         print('File name already exists, cannot move.')
         return 'File name exists'
+    except FileNotFoundError:
+        print('PDF File was not found, cannot move.')
+        return 'File to move was missing'
     else:
         print('File has been moved.')
         return None
 
 
-def make_dir(name, filename, root_path, year_path):
+def make_dir(name, filename, root_path, year_path, results=None):
     # results = None
     if path.isdir('{}/{}'.format(root_path, year_path)) is True:
         if path.isdir('{}/{}/{}'.format(root_path, year_path, name)) is True:
             print('Folder already exists, moving file.')
-            move_file(name, filename, root_path, year_path)
+            results = move_file(name, filename, root_path, year_path)
         else:
             try:
                 mkdir('{}/{}/{}'.format(root_path, year_path, name))
@@ -133,7 +137,7 @@ def make_dir(name, filename, root_path, year_path):
 
 
 def main():
-    root_path, year_path = get_config()
+    root_path, year_path, confirm = get_config()
     if not root_path:
         return
     # filename = get_filename()
