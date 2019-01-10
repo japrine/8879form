@@ -23,8 +23,16 @@ def get_config():
 
 
 def get_filename():
-    if sys.argv[1:]:
+    if len(sys.argv) == 2:
         filename = sys.argv[1]
+        print(filename)
+        return filename
+    elif len(sys.argv) > 2:
+        filename = sys.argv[1]
+        for args in sys.argv[2:]:
+            print(args)
+            filename += ' ' + args
+        print(filename)
         return filename
     else:
         print('No filename specified')
@@ -37,10 +45,17 @@ def get_page(filename, page_num):
             pdf_reader = PyPDF2.PdfFileReader(f)
             qty = pdf_reader.numPages
             page_obj = pdf_reader.getPage(page_num)
-            the_page = page_obj.extractText()
+            try:
+                the_page = page_obj.extractText()
+            except Exception as e:
+                print(e)
+                the_page = ""
             return the_page, qty
     except FileNotFoundError:
-        print('Filename specified was not found')
+        print('Filename not found')
+        return None, None
+    except PyPDF2.utils.PdfReadError:
+        print('EOF Marker Not Found')
         return None, None
 
 
@@ -261,7 +276,7 @@ class NameGUI:
         confirm = self.tk_confirm.get()
         root_path = self.tk_path.get()
         year_path = self.tk_year.get()
-        if name == "":
+        if name == "" or name == 'None':
             messagebox.showinfo('Error', 'Need to enter a name')
             return
 
@@ -294,6 +309,7 @@ def main():
         return
     filename = get_filename()
     # filename = '2018_12_19_14_04_32.pdf'
+    # filename = 'Mathematics for Computer Science 2004.pdf'
     if not filename:
         return
     name = name_from_pdf(filename)
