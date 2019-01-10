@@ -30,7 +30,7 @@ def get_filename():
     elif len(sys.argv) > 2:
         filename = sys.argv[1]
         for args in sys.argv[2:]:
-            print(args)
+            # print(args)
             filename += ' ' + args
         print(filename)
         return filename
