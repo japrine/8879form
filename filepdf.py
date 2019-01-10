@@ -19,7 +19,7 @@ def get_config():
             return root_path, year_path, confirm, count
     except FileNotFoundError:
         print('Config not found')
-        return None, None, None
+        return None, None, None, None
 
 
 def get_filename():
@@ -51,15 +51,17 @@ def name_from_pdf(filename):
         return False
     name = None
     if the_page:
-        while page_num <= page_qty:
+        while page_num <= 50:       # Hardcoded max pages to look at, page_qty can be very slow if large pdf
             if the_page.find('8879') == 0:
                 name_end = the_page.find("Spouse's name")
                 name_start = the_page.find("Taxpayer's name") + 15
                 name = the_page[name_start:name_end]
                 break
             else:
-                print('Page is not 8879, advancing')
+                print('Page {} is not 8879, advancing'.format(page_num))
                 page_num += 1
+                if page_num == page_qty:
+                    break
                 the_page, page_qty = get_page(filename, page_num)
         return name
     else:
@@ -76,7 +78,7 @@ def name_parser(name):
 def move_file(name, filename, root_path, year_path):
     now = datetime.datetime.now()
     global new_filename
-    new_filename = name + now.strftime(' %m-%d-%Y %H%M.pdf')
+    new_filename = name.upper() + now.strftime(' %m-%d-%Y %H%M.pdf')
     print(new_filename)
     try:
         rename(filename, '{}/{}/{}/{}'.format(root_path, year_path, name, new_filename))
@@ -100,7 +102,7 @@ def make_dir(name, filename, root_path, year_path, results=None):
             return results
         else:
             try:
-                mkdir('{}/{}/{}'.format(root_path, year_path, name))
+                mkdir('{}/{}/{}'.format(root_path, year_path, name.upper()))
             except OSError:
                 print('Failed creating directory')
                 return 'Failed to create folder'
@@ -266,7 +268,7 @@ class NameGUI:
         results = make_dir(name, filename, root_path, year_path)
         lines = ['Moving file {}'.format(filename),
                  'Moving to folder:',
-                 '{}/{}/{}/'.format(root_path, year_path, name),
+                 '{}/{}/{}/'.format(root_path, year_path, name.upper()),
                  'New filename:',
                  '{}'.format(new_filename),
                  '',
