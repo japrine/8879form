@@ -287,6 +287,8 @@ class NameGUI:
         self.client_heading.grid(row=2, column=0, sticky=E)
 
         self.client_entry = Entry(bottom, textvariable=self.tk_name, relief=SUNKEN, font='bold', bg='gray98', bd=2)
+        self.client_entry.focus_set()
+        self.client_entry.bind('<Return>', self.confirm_client)
         self.client_entry.grid(row=2, column=1, columnspan=1, sticky="ew")
 
         self.client_btn = Button(bottom, text='Confirm & Move', command=self.confirm_client, bg='light green', bd=3)
@@ -333,7 +335,7 @@ class NameGUI:
             print('Year Set')
         print(year_path)
 
-    def confirm_client(self):
+    def confirm_client(self, event='Enter'):
         global name, confirm, root_path, year_path, filename
         name = self.tk_name.get()
         confirm = self.tk_confirm.get()
@@ -372,9 +374,11 @@ def main():
         return
     filename = get_filename()
     # filename = '2018_12_19_14_04_32.pdf'
+    # filename = 'Mathematics for Computer Science 2017.pdf'
     if not filename:
         return
     page = find_8879(filename)
+    name = ""
     if page:
         name = primary_name_extractor(page)
 
