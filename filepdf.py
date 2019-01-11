@@ -59,18 +59,22 @@ def get_page(filename, page_num):
         return None, None
 
 
-def name_from_pdf(filename):
+def find_8879(filename):
     page_num = 0
     the_page, page_qty = get_page(filename, page_num)
     if page_qty is None:
         return False
-    name = None
+    page = None
     if the_page:
         while page_num <= 50:       # Hardcoded max pages to look at, page_qty can be very slow if large pdf
             if the_page.find('8879') == 0:
-                name_end = the_page.find("Spouse's name")
-                name_start = the_page.find("Taxpayer's name") + 15
-                name = the_page[name_start:name_end]
+                page = the_page
+                break
+            elif the_page.find('8879') == 4:
+                page = the_page
+                break
+            elif the_page.find('8879') == 5:
+                page = the_page
                 break
             else:
                 print('Page {} is not 8879, advancing'.format(page_num))
@@ -78,15 +82,74 @@ def name_from_pdf(filename):
                 if page_num == page_qty:
                     break
                 the_page, page_qty = get_page(filename, page_num)
-        return name
+        return page
     else:
-        return name
+        return page
 
 
-def name_parser(name):
-    print('Done, Found name:', name)
+def primary_parser(name):
+    print('Parsing Primary name:', name)
     name_parse = HumanName(name)
+    last = name_parse.last
     name = name_parse.last + ' ' + name_parse.first
+    if name_parse.middle:
+        name = name + ' ' + name_parse.middle
+    return name, last
+
+
+def spouse_parser(name):
+    print('Parsing Spouse name:', name)
+    name_parse = HumanName(name)
+    name = name_parse.first
+    if name_parse.middle:
+        name = name + ' ' + name_parse.middle
+    return name
+
+
+def primary_name_extractor(page):
+    if page.find("Taxpayer's name") > 0:
+        name_start = page.find("Taxpayer's name") + 15
+        name_end = page.find("Spouse's name")
+        name = page[name_start:name_end]
+    else:
+        name_start = page.find('Identification Number (SID)') + 27
+        name_end = page.find("Spouse's name")
+        name = page[name_start:name_end]
+    if -1 < name.find('IRS e-file'):
+        name_start = name.find("Social")
+        name = name[name_start:]
+    if name.find('Social') >= 0:
+        if -1 < name.find('Social') < 2:
+            name_start = name.find('Social')
+            name = name[name_start+22:]
+            if -1 < name.find('-') < 11:
+                name_start = name.find('-')
+                name = name[name_start+8:]
+            if 11 < name.find('-'):
+                name_end = name.find('-')
+                name = name[:name_end-3]
+        if name.find('Social') > 8:
+            name_end = name.find('Social')
+            name = name[:name_end]
+    name, last = primary_parser(name)
+    spouse = spouse_name_extractor(page, last)
+    if spouse:
+        spouse = spouse_parser(spouse)
+        name = name + " & " + spouse
+    return name
+
+
+def spouse_name_extractor(page, last):
+    name_start = page.find("Spouse's name") + 13
+    page = page[name_start:]
+    if -1 < page.find(last):
+        name_end = page.find(last) + len(last)
+        name = page[:name_end]
+        if name.find('social') >= 0:
+            name_start = name.find('social')
+            name = name[name_start + 22:]
+    else:
+        name = None
     return name
 
 
@@ -309,12 +372,11 @@ def main():
         return
     filename = get_filename()
     # filename = '2018_12_19_14_04_32.pdf'
-    # filename = 'Mathematics for Computer Science 2004.pdf'
     if not filename:
         return
-    name = name_from_pdf(filename)
-    if name:
-        name = name_parser(name)
+    page = find_8879(filename)
+    if page:
+        name = primary_name_extractor(page)
 
     # Run the GUI to confirm settings and name
     root = Tk()
@@ -329,4 +391,5 @@ def main():
     save_settings(root_path, year_path, confirm, count)
 
 
-main()
+if __name__ == '__main__':
+    main()
