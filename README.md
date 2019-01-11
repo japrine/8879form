@@ -1,6 +1,10 @@
 # 8879form
-Tax document PDF filer - Find taxpayers name in e-file, confirm &amp; move-create folder structure for archive.
+Tax document PDF filer - Extracts taxpayers name from 8879 e-file form (Scanned with OCR)
 
-GUI popup to enter/confirm client name - moves files into year/name folder with name+date file names.
+Renames the file to Last FIrst Middle & Spouse First Middle (If Spouse and Middle exsists) 
+Also creates a folder from the name and moves the file into it.
+Structure = Root Folder/Year/Last FIrst Middle & Spouse First Middle/Last FIrst Middle & Spouse First Middle Month/Day 24H Time
 
-Scan documents with OCR enabled
+tkinter GUI interface, displays name found in entry form for confirmation.
+Interface also includes settings to pick root folder, and set tax year for subfolder and to enable confirmation window popup.
+
