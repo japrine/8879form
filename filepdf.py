@@ -172,7 +172,6 @@ def move_file(name, filename, root_path, year_path):
 
 
 def make_dir(name, filename, root_path, year_path, results=None):
-    # results = None
     if path.isdir('{}/{}'.format(root_path, year_path)) is True:
         if path.isdir('{}/{}/{}'.format(root_path, year_path, name)) is True:
             print('Folder already exists, moving file.')
@@ -216,7 +215,13 @@ def save_settings(root_path, year_path, confirm, count):
 
 
 class NameGUI:
-    def __init__(self, master):
+    def __init__(self, master, name, filename):
+        self.root_path, self.year_path, self.confirm, self.count = get_config()
+        if not self.root_path:
+            return
+        self.filename = filename
+        self.master = master
+
         master.protocol("WM_DELETE_WINDOW", self.confirm_exit)
         # Top Heading Section
         heading = Frame(master, bg='white')
@@ -236,11 +241,11 @@ class NameGUI:
         settings.grid_rowconfigure(2, pad=5)
 
         self.tk_path = StringVar()
-        self.tk_path.set(root_path)
+        self.tk_path.set(self.root_path)
         self.tk_year = IntVar()
-        self.tk_year.set(year_path)
+        self.tk_year.set(self.year_path)
         self.tk_confirm = IntVar()
-        self.tk_confirm.set(confirm)
+        self.tk_confirm.set(self.confirm)
 
         # Path Settings
         self.path_heading = Label(settings, text='Root Folder:', bg='white')
@@ -313,7 +318,7 @@ class NameGUI:
         master.resizable(False, False)
 
     def choose_folder(self):
-        global root_path
+        # global root_path
         root_path = filedialog.askdirectory(initialdir="/", title="Select Root Folder")
         print(root_path)
         if root_path is "":
@@ -325,8 +330,7 @@ class NameGUI:
         print(root_path)
 
     def choose_year(self):
-        global year_path
-        year_path = simpledialog.askinteger(title='Set Year', prompt='Enter Year YYYY:', initialvalue=year_path)
+        year_path = simpledialog.askinteger(title='Set Year', prompt='Enter Year YYYY:', initialvalue=self.year_path)
         if year_path is None:
             year_path = self.tk_year.get()
             print('No Year Set')
@@ -336,7 +340,6 @@ class NameGUI:
         print(year_path)
 
     def confirm_client(self, event='Enter'):
-        global name, confirm, root_path, year_path, filename
         name = self.tk_name.get()
         confirm = self.tk_confirm.get()
         root_path = self.tk_path.get()
@@ -345,8 +348,8 @@ class NameGUI:
             messagebox.showinfo('Error', 'Need to enter a name')
             return
 
-        results = make_dir(name, filename, root_path, year_path)
-        lines = ['Moving file {}'.format(filename),
+        results = make_dir(name, self.filename, root_path, year_path)
+        lines = ['Moving file {}'.format(self.filename),
                  'Moving to folder:',
                  '{}/{}/{}/'.format(root_path, year_path, name.upper()),
                  'New filename:',
@@ -357,42 +360,35 @@ class NameGUI:
         if confirm == 1:
             print('Displaying Confirmation')
             messagebox.showinfo('Confirmation', '\n'.join(lines))
-        # print(name, root_path, year_path, confirm)
-        root.quit()
+        save_settings(root_path, year_path, confirm, self.count)
+        self.master.quit()
 
     def confirm_exit(self):
         response = messagebox.askokcancel('Confirm Exit', 'Do you really want to cancel?', default="cancel")
         if response is True:
             print('Canceling Move')
-            root.quit()
+            self.master.quit()
 
 
 def main():
-    global root_path, year_path, confirm, name, root, filename
-    root_path, year_path, confirm, count = get_config()
-    if not root_path:
-        return
     filename = get_filename()
     # filename = '2018_12_19_14_04_32.pdf'
     # filename = 'Mathematics for Computer Science 2017.pdf'
     if not filename:
         return
     page = find_8879(filename)
-    name = ""
     if page:
         name = primary_name_extractor(page)
+    else:
+        name = ''
 
     # Run the GUI to confirm settings and name
     root = Tk()
     root.title('Scan Name & Mover')
     root.geometry('600x230')
     root.configure(bg='white')
-    NameGUI(root)
+    NameGUI(root, name, filename)
     root.mainloop()
-
-    if not name:
-        return
-    save_settings(root_path, year_path, confirm, count)
 
 
 if __name__ == '__main__':
