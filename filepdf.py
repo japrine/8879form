@@ -30,7 +30,6 @@ def get_filename():
     elif len(sys.argv) > 2:
         filename = sys.argv[1]
         for args in sys.argv[2:]:
-            # print(args)
             filename += ' ' + args
         print(filename)
         return filename
@@ -107,6 +106,8 @@ def spouse_parser(name):
 
 
 def primary_name_extractor(page):
+    if not page:
+        return ""
     if page.find("Taxpayer's name") > 0:
         name_start = page.find("Taxpayer's name") + 15
         name_end = page.find("Spouse's name")
@@ -376,11 +377,8 @@ def main():
     # filename = 'Mathematics for Computer Science 2017.pdf'
     if not filename:
         return
-    page = find_8879(filename)
-    if page:
-        name = primary_name_extractor(page)
-    else:
-        name = ''
+
+    name = primary_name_extractor(find_8879(filename))
 
     # Run the GUI to confirm settings and name
     root = Tk()
